@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastery: Ôn Tập Chương 6 - Toán 11</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']], 
+                displayMath: [['$$', '$$']],
+                processEscapes: true
+            },
+            options: { enableMenu: false },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fdf4ff; color: #0f172a; }
+        .math-render { opacity: 0; transition: opacity 0.5s ease; }
+        .math-render.ready { opacity: 1; }
+        .choice-btn:active { transform: scale(0.97); }
+        .explanation-box { 
+            border-left: 8px solid #a21caf; 
+            background-color: #faf5ff;
+            box-shadow: 0 4px 15px rgba(162, 28, 175, 0.08);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-check { box-shadow: 0 10px 20px -5px rgba(162, 28, 175, 0.3); }
+        .item-row { transition: all 0.2s ease; }
+        .item-row:hover { background-color: #ffffff; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 md:p-6">
+    <div id="game-app" class="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(162,28,175,0.15)] border border-fuchsia-50 flex flex-col">
+        
+        <!-- Header -->
+        <div class="bg-fuchsia-700 p-8 text-white text-center relative overflow-hidden rounded-t-[2.5rem]">
+            <div class="absolute inset-0 bg-gradient-to-br from-fuchsia-900 via-fuchsia-700 to-purple-500 opacity-95"></div>
+            <div class="relative z-10">
+                <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2 italic uppercase">ÔN TẬP TỔNG HỢP CHƯƠNG VI</h1>
+                <p class="text-fuchsia-100 text-sm font-medium opacity-90 uppercase tracking-[0.3em]">Hàm Số Mũ & Lôgarit - Toán 11 KNTT</p>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div id="progress-container" class="hidden h-3 bg-slate-100 relative">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-fuchsia-400 to-purple-500 transition-all duration-700 w-0"></div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="main-content" class="p-6 md:p-12 flex-grow min-h-[600px] flex flex-col overflow-y-auto">
+            <div id="start-screen" class="text-center py-16 my-auto">
+                <div class="text-[10rem] mb-8 leading-none">🎓</div>
+                <h2 class="text-4xl font-black text-slate-800 mb-6 uppercase tracking-tighter">KIỂM TRA KIẾN THỨC</h2>
+                <p class="text-slate-500 mb-12 max-w-2xl mx-auto leading-relaxed text-xl">
+                    Hệ thống 50 câu hỏi bám sát chuyên đề <b>Ôn tập Chương VI</b>. <br>
+                    Lời giải chuẩn LaTeX 100%. Lỗi hiển thị công thức đã được khắc phục. Thuật toán đảm bảo lượt đề sau <b class="text-fuchsia-600">không trùng quá 2 câu</b> với lượt làm đề ngay liền trước.
+                </p>
+                <button onclick="initGame()" class="bg-fuchsia-700 hover:bg-fuchsia-800 text-white px-24 py-6 rounded-[2rem] font-black text-2xl shadow-xl transition-all active:scale-95 transform hover:-translate-y-1">BẮT ĐẦU NGAY</button>
+            </div>
+        </div>
+
+        <!-- Footer Control -->
+        <div id="footer-actions" class="hidden p-8 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 rounded-b-[2.5rem]">
+            <div id="status" class="text-lg font-black text-fuchsia-700 uppercase tracking-[0.25em]">CÂU 1 / 15</div>
+            <div class="flex gap-4 w-full md:w-auto">
+                <button id="check-btn" onclick="processAnswer()" class="flex-1 md:flex-none bg-fuchsia-700 hover:bg-fuchsia-800 text-white px-16 py-4 rounded-2xl font-bold text-xl transition shadow-lg btn-check active:scale-95">Kiểm tra</button>
+                <button id="next-btn" onclick="renderNext()" class="hidden flex-1 md:flex-none bg-purple-500 hover:bg-purple-600 text-white px-16 py-4 rounded-2xl font-bold text-xl transition shadow-lg active:scale-95">Tiếp theo →</button>
+                <button id="result-btn" onclick="finishGame()" class="hidden flex-1 md:flex-none bg-orange-500 hover:bg-orange-600 text-white px-16 py-4 rounded-2xl font-bold text-xl transition shadow-lg active:scale-95">Kết quả</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_POOL = {
+            part1: [
+                { id: "oc6_p1_1", question: "Cho $a &gt; 0$, $m, n \\in \\mathbb{R}$. Khẳng định nào sau đây đúng?", options: ["$a^m + a^n = a^{m+n}$", "$a^m \\cdot a^n = a^{m-n}$", "$(a^m)^n = (a^n)^m$", "$\\frac{a^m}{a^n} = a^{n-m}$"], correct: 2, explanation: "Theo tính chất lũy thừa, ta có $(a^m)^n = a^{m \\cdot n}$ và $(a^n)^m = a^{n \\cdot m}$. Do phép nhân có tính giao hoán nên $(a^m)^n = (a^n)^m$." },
+                { id: "oc6_p1_2", question: "Rút gọn biểu thức $P = x^{\\frac{1}{3}} \\cdot \\sqrt[6]{x}$ với $x &gt; 0$.", options: ["$P = \\sqrt{x}$", "$P = x^{\\frac{1}{8}}$", "$P = x^{\\frac{2}{9}}$", "$P = x^2$"], correct: 0, explanation: "Đưa căn thức về lũy thừa: $\\sqrt[6]{x} = x^{\\frac{1}{6}}$. <br>Ta có: $P = x^{\\frac{1}{3}} \\cdot x^{\\frac{1}{6}} = x^{\\frac{1}{3} + \\frac{1}{6}} = x^{\\frac{1}{2}} = \\sqrt{x}$." },
+                { id: "oc6_p1_3", question: "Cho $a$ là số thực dương khác 1. Mệnh đề nào dưới đây đúng với mọi số dương $x, y$?", options: ["$\\log_a \\frac{x}{y} = \\log_a x - \\log_a y$", "$\\log_a \\frac{x}{y} = \\log_a x + \\log_a y$", "$\\log_a \\frac{x}{y} = \\log_a(x - y)$", "$\\log_a \\frac{x}{y} = \\frac{\\log_a x}{\\log_a y}$"], correct: 0, explanation: "Theo tính chất cơ bản của lôgarit, lôgarit của một thương bằng hiệu hai lôgarit: $\\log_a \\frac{x}{y} = \\log_a x - \\log_a y$." },
+                { id: "oc6_p1_4", question: "Với $a, b$ là các số thực dương tùy ý và $a \\ne 1$, biểu thức $\\log_{a^5} b$ bằng:", options: ["$5 \\log_a b$", "$\\frac{1}{5} + \\log_a b$", "$5 + \\log_a b$", "$\\frac{1}{5} \\log_a b$"], correct: 3, explanation: "Áp dụng công thức đưa số mũ của cơ số ra ngoài dấu lôgarit: $\\log_{a^n} b = \\frac{1}{n} \\log_a b$. <br>Suy ra $\\log_{a^5} b = \\frac{1}{5} \\log_a b$." },
+                { id: "oc6_p1_5", question: "Trong các hàm số sau, hàm số nào là hàm số mũ?", options: ["$y = \\log_3 x^2$", "$y = \\log(x^3)$", "$y = \\left(\\frac{e}{4}\\right)^x$", "$y = x^{-3}$"], correct: 2, explanation: "Hàm số mũ có dạng $y = a^x$ với cơ số $a$ là hằng số ($a &gt; 0, a \\ne 1$) và biến $x$ ở trên số mũ. <br>Hàm số $y = \\left(\\frac{e}{4}\\right)^x$ thỏa mãn định nghĩa này." },
+                { id: "oc6_p1_6", question: "Hàm số nào dưới đây đồng biến trên tập xác định của nó?", options: ["$y = \\log_{\\frac{2}{3}} x$", "$y = \\log_{\\frac{1}{3}} x$", "$y = \\log_3 x$", "$y = \\log_{\\frac{3}{5}} x$"], correct: 2, explanation: "Hàm số $y = \\log_a x$ đồng biến trên $(0; +\\infty)$ khi và chỉ khi cơ số $a &gt; 1$. <br>Vì $a = 3 &gt; 1$ nên hàm số $y = \\log_3 x$ đồng biến trên tập xác định." },
+                { id: "oc6_p1_7", question: "Nghiệm của phương trình $3^{x-1} = 27$ là:", options: ["$x = 4$", "$x = 3$", "$x = 2$", "$x = 1$"], correct: 0, explanation: "Ta có: $3^{x-1} = 27 \\Leftrightarrow 3^{x-1} = 3^3 \\Leftrightarrow x - 1 = 3 \\Leftrightarrow x = 4$." },
+                { id: "oc6_p1_8", question: "Nghiệm của phương trình $\\log_3(2x-1) = 2$ là:", options: ["$x = 3$", "$x = 5$", "$x = \\frac{9}{2}$", "$x = \\frac{7}{2}$"], correct: 1, explanation: "Điều kiện: $2x - 1 &gt; 0 \\Leftrightarrow x &gt; \\frac{1}{2}$. <br>Phương trình $\\Leftrightarrow 2x - 1 = 3^2 \\Leftrightarrow 2x - 1 = 9 \\Leftrightarrow 2x = 10 \\Leftrightarrow x = 5$ (thỏa mãn)." },
+                { id: "oc6_p1_9", question: "Tập nghiệm của bất phương trình $\\log x \\ge 1$ là:", options: ["$(10; +\\infty)$", "$(0; +\\infty)$", "$[10; +\\infty)$", "$(-\\infty; 10)$"], correct: 2, explanation: "Đây là lôgarit thập phân (cơ số 10). <br>Bất phương trình: $\\log x \\ge 1 \\Leftrightarrow x \\ge 10^1 \\Leftrightarrow x \\ge 10$. <br>Kết hợp điều kiện $x &gt; 0$, ta có tập nghiệm $S = [10; +\\infty)$." },
+                { id: "oc6_p1_10", question: "Tập nghiệm của bất phương trình $\\left(\\frac{1}{3}\\right)^x &gt; 9$ là:", options: ["$(2; +\\infty)$", "$(-\\infty; -2)$", "$(-\\infty; 2)$", "$(-2; +\\infty)$"], correct: 1, explanation: "Bất phương trình tương đương: $\\left(\\frac{1}{3}\\right)^x &gt; 3^2 \\Leftrightarrow 3^{-x} &gt; 3^2$. <br>Vì cơ số $3 &gt; 1$ nên $-x &gt; 2 \\Leftrightarrow x &lt; -2$. <br>Tập nghiệm là $S = (-\\infty; -2)$." },
+                { id: "oc6_p1_11", question: "Công thức $I = I_0 \\cdot e^{-\\mu x}$ mô tả cường độ ánh sáng truyền trong nước, với $\\mu = 1.4$. Cường độ ánh sáng giảm bao nhiêu lần khi truyền từ độ sâu 3m xuống độ sâu 30m?", options: ["$e^{30}$", "$2.6081 \\cdot 10^{16}$", "$e^{27}$", "$2.6081 \\cdot 10^{-16}$"], correct: 1, explanation: "Cường độ ánh sáng ở độ sâu 3m: $I_1 = I_0 \\cdot e^{-1.4 \\cdot 3} = I_0 \\cdot e^{-4.2}$. <br>Cường độ ánh sáng ở độ sâu 30m: $I_2 = I_0 \\cdot e^{-1.4 \\cdot 30} = I_0 \\cdot e^{-42}$. <br>Tỷ lệ giảm: $\\frac{I_1}{I_2} = \\frac{e^{-4.2}}{e^{-42}} = e^{37.8} \\approx 2.6081 \\cdot 10^{16}$ lần." },
+                { id: "oc6_p1_12", question: "Mức cường độ âm $L = 10 \\log \\frac{I}{I_0}$ (dB) với $I_0 = 10^{-12} W/m^2$. Mức cường độ âm của một cuộc trò chuyện bình thường có $I = 10^{-7} W/m^2$ là bao nhiêu?", options: ["50 dB", "60 dB", "70 dB", "80 dB"], correct: 0, explanation: "Thay các giá trị vào công thức: <br>$L = 10 \\log \\frac{10^{-7}}{10^{-12}} = 10 \\log(10^5) = 10 \\cdot 5 = 50$ dB." },
+                { id: "oc6_p1_13", question: "Tập xác định của hàm số $y = (x - 1)^{\\sqrt{3}}$ là:", options: ["$\\mathbb{R}$", "$[1; +\\infty)$", "$(1; +\\infty)$", "$\\mathbb{R} \\setminus \\{1\\}$"], correct: 2, explanation: "Vì số mũ $\\sqrt{3}$ là một số vô tỉ (không nguyên), cơ số phải lớn hơn 0. <br>Điều kiện: $x - 1 &gt; 0 \\Leftrightarrow x &gt; 1$. Tập xác định là $(1; +\\infty)$." },
+                { id: "oc6_p1_14", question: "Giá trị của biểu thức $\\log_2(8\\sqrt{2})$ bằng:", options: ["3", "4", "3.5", "2.5"], correct: 2, explanation: "Ta có: $8\\sqrt{2} = 2^3 \\cdot 2^{\\frac{1}{2}} = 2^{3 + 0.5} = 2^{3.5}$. <br>Do đó $\\log_2(8\\sqrt{2}) = \\log_2(2^{3.5}) = 3.5$." },
+                { id: "oc6_p1_15", question: "Nghiệm của phương trình $5^{x+1} - 5^x = 100$ là:", options: ["$x = 1$", "$x = 2$", "$x = 3$", "$x = 4$"], correct: 1, explanation: "Biến đổi phương trình: $5^x \\cdot 5^1 - 5^x = 100 \\Leftrightarrow 5^x(5 - 1) = 100$. <br>$\\Leftrightarrow 4 \\cdot 5^x = 100 \\Leftrightarrow 5^x = 25 \\Leftrightarrow x = 2$." },
+                { id: "oc6_p1_16", question: "Giá trị của biểu thức $\\ln(e^5)$ bằng:", options: ["1", "e", "5", "0"], correct: 2, explanation: "Lôgarit tự nhiên $\\ln$ có cơ số là $e$. <br>Theo tính chất cơ bản: $\\ln(e^5) = \\log_e(e^5) = 5$." },
+                { id: "oc6_p1_17", question: "Đồ thị của mọi hàm số mũ $y = a^x$ (với $a &gt; 0, a \\ne 1$) luôn đi qua điểm nào dưới đây?", options: ["$(1; 0)$", "$(0; 1)$", "$(a; 1)$", "$(0; 0)$"], correct: 1, explanation: "Thay $x = 0$ vào hàm số ta được $y = a^0 = 1$. <br>Vậy đồ thị luôn đi qua điểm $(0; 1)$ nằm trên trục tung." },
+                { id: "oc6_p1_18", question: "Tập xác định của hàm số $y = \\log_3(x^2 - 4x + 3)$ là:", options: ["$(1; 3)$", "$(-\\infty; 1) \\cup (3; +\\infty)$", "$[1; 3]$", "$(-\\infty; 1] \\cup [3; +\\infty)$"], correct: 1, explanation: "Biểu thức dưới dấu lôgarit phải dương: $x^2 - 4x + 3 &gt; 0$. <br>Nghiệm của phương trình bậc hai là $1$ và $3$. Hệ số $a=1 &gt; 0$. <br>Suy ra $x &lt; 1$ hoặc $x &gt; 3$. Tập xác định là $(-\\infty; 1) \\cup (3; +\\infty)$." },
+                { id: "oc6_p1_19", question: "Tập nghiệm của bất phương trình $2^{x^2 - 3x} \\le 16$ là:", options: ["$[-1; 4]$", "$(-1; 4)$", "$(-\\infty; -1] \\cup [4; +\\infty)$", "$\\mathbb{R}$"], correct: 0, explanation: "Ta có $16 = 2^4$. Vì cơ số $2 &gt; 1$ nên bất phương trình giữ nguyên chiều. <br>$x^2 - 3x \\le 4 \\Leftrightarrow x^2 - 3x - 4 \\le 0$. <br>Nghiệm của PT hệ quả là $-1$ và $4$. BPT mang dấu $\\le 0$ nên lấy đoạn giữa: $x \\in [-1; 4]$." },
+                { id: "oc6_p1_20", question: "Nghiệm của phương trình $\\log_2 x + \\log_2(x-2) = 3$ là:", options: ["$x = 4$", "$x = -2$", "$x = 4; x = -2$", "Vô nghiệm"], correct: 0, explanation: "Điều kiện: $x &gt; 2$. <br>Phương trình $\\Leftrightarrow \\log_2(x(x-2)) = 3 \\Leftrightarrow x^2 - 2x = 8 \\Leftrightarrow x^2 - 2x - 8 = 0$. <br>Giải ra ta được $x = 4$ (nhận) và $x = -2$ (loại). Nghiệm là $x = 4$." },
+                { id: "oc6_p1_21", question: "Nghiệm của phương trình $3^{2x} = 81$ là:", options: ["$x = 2$", "$x = 3$", "$x = 4$", "$x = 1$"], correct: 0, explanation: "Ta có $81 = 3^4$. <br>Phương trình tương đương: $3^{2x} = 3^4 \\Leftrightarrow 2x = 4 \\Leftrightarrow x = 2$." },
+                { id: "oc6_p1_22", question: "Rút gọn biểu thức $\\frac{a^{1/3} \\cdot a^{1/2}}{a^{1/6}}$ với $a &gt; 0$.", options: ["$a$", "$a^{2/3}$", "$a^{1/3}$", "$\\sqrt{a}$"], correct: 1, explanation: "Áp dụng tính chất lũy thừa: <br>Tử số: $a^{1/3 + 1/2} = a^{5/6}$. <br>Biểu thức = $\\frac{a^{5/6}}{a^{1/6}} = a^{5/6 - 1/6} = a^{4/6} = a^{2/3}$." },
+                { id: "oc6_p1_23", question: "Tập nghiệm của bất phương trình $0.2^x &gt; 0.04$ là:", options: ["$(2; +\\infty)$", "$(-\\infty; 2)$", "$(0.2; +\\infty)$", "$(-\\infty; 0.2)$"], correct: 1, explanation: "Ta có $0.04 = (0.2)^2$. <br>Bất phương trình trở thành: $0.2^x &gt; 0.2^2$. <br>Vì cơ số $0.2 &lt; 1$ nên ta đảo chiều: $x &lt; 2$. Tập nghiệm là $(-\\infty; 2)$." },
+                { id: "oc6_p1_24", question: "Giải bất phương trình $\\log_{\\frac{1}{2}} x \\ge 0$.", options: ["$x \\ge 1$", "$x \\le 1$", "$0 &lt; x \\le 1$", "$0 &lt; x &lt; 1$"], correct: 2, explanation: "Điều kiện xác định: $x &gt; 0$. <br>Ta có $\\log_{\\frac{1}{2}} x \\ge \\log_{\\frac{1}{2}} 1$. Vì cơ số $1/2 &lt; 1$, BPT đổi chiều $\\Leftrightarrow x \\le 1$. <br>Kết hợp điều kiện, ta được $0 &lt; x \\le 1$." },
+                { id: "oc6_p1_25", question: "Mệnh đề nào sau đây ĐÚNG khi so sánh $3^{\\sqrt{2}}$ và $3^{1.5}$?", options: ["$3^{\\sqrt{2}} &gt; 3^{1.5}$", "$3^{\\sqrt{2}} &lt; 3^{1.5}$", "$3^{\\sqrt{2}} = 3^{1.5}$", "Không thể so sánh"], correct: 1, explanation: "Ta có $\\sqrt{2} \\approx 1.414$. Suy ra $\\sqrt{2} &lt; 1.5$. <br>Vì cơ số $3 &gt; 1$ nên hàm đồng biến, do đó $3^{\\sqrt{2}} &lt; 3^{1.5}$." },
+                { id: "oc6_p1_26", question: "Tìm $x$ biết $\\log_x 16 = 2$.", options: ["$x = 4$", "$x = 8$", "$x = -4$", "$x = 4; x = -4$"], correct: 0, explanation: "Điều kiện cơ số: $x &gt; 0, x \\ne 1$. <br>Từ định nghĩa: $\\log_x 16 = 2 \\Leftrightarrow x^2 = 16 \\Rightarrow x = \\pm 4$. <br>Kết hợp điều kiện, ta chỉ lấy $x = 4$." },
+                { id: "oc6_p1_27", question: "Tổng các nghiệm của phương trình $4^x - 5 \\cdot 2^x + 4 = 0$ là:", options: ["5", "2", "4", "0"], correct: 1, explanation: "Đặt $t = 2^x (t &gt; 0)$. Phương trình thành $t^2 - 5t + 4 = 0 \\Rightarrow t = 1$ hoặc $t = 4$. <br>- $2^x = 1 \\Rightarrow x = 0$. <br>- $2^x = 4 \\Rightarrow x = 2$. <br>Tổng các nghiệm là $0 + 2 = 2$." },
+                { id: "oc6_p1_28", question: "Rút gọn biểu thức $\\log_a b \\cdot \\log_b c$ (với $a, b, c &gt; 0; a, b \\ne 1$).", options: ["$\\log_c a$", "$\\log_b a$", "$\\log_a c$", "1"], correct: 2, explanation: "Theo công thức đổi cơ số nối tiếp (quy tắc dây chuyền lôgarit): $\\log_a b \\cdot \\log_b c = \\log_a c$." },
+                { id: "oc6_p1_29", question: "Một người gửi số tiền $P$ vào ngân hàng với lãi suất $r$ mỗi kỳ. Nếu tính theo thể thức lãi kép, số tiền thu được sau $N$ kỳ là:", options: ["$A = P(1+r)N$", "$A = P(1+N)^r$", "$A = P(1+r)^N$", "$A = P + PrN$"], correct: 2, explanation: "Công thức chuẩn của lãi kép là $A = P(1+r)^N$, trong đó phần lãi sinh ra được cộng dồn vào vốn gốc để tính lãi cho kỳ tiếp theo." },
+                { id: "oc6_p1_30", question: "Giá trị của biểu thức $10^{\\log 7}$ là:", options: ["10", "7", "$\\log 7$", "100"], correct: 1, explanation: "Sử dụng tính chất $a^{\\log_a b} = b$. <br>Với lôgarit thập phân, cơ số $a = 10$. Do đó $10^{\\log_{10} 7} = 7$." }
+            ],
+            part2: [
+                { id: "oc6_p2_1", question: "Cho hàm số $y = \\left(\\frac{1}{2}\\right)^x$ có đồ thị $(C)$. Xét tính đúng/sai:", items: [
+                    { text: "Tập xác định của hàm số là $\\mathbb{R}$.", isTrue: true },
+                    { text: "Hàm số đồng biến trên toàn bộ $\\mathbb{R}$.", isTrue: false },
+                    { text: "Đồ thị $(C)$ nằm hoàn toàn phía trên trục hoành.", isTrue: true },
+                    { text: "Đồ thị $(C)$ đối xứng với đồ thị hàm số $y = \\log_{\\frac{1}{2}} x$ qua đường thẳng $y = x$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Hàm số mũ cơ bản xác định với mọi $x \\in \\mathbb{R}$.<br>b) Sai. Cơ số $a = 1/2 &lt; 1$ nên hàm số nghịch biến.<br>c) Đúng. Tập giá trị của hàm mũ là $(0; +\\infty)$ nên đồ thị nằm trên trục $Ox$.<br>d) Đúng. Hàm số mũ và hàm số lôgarit có cùng cơ số là hai hàm số ngược của nhau, đồ thị luôn đối xứng qua đường phân giác $y=x$." },
+                { id: "oc6_p2_2", question: "Cho phương trình $16^{2-x} \\cdot 2^{x^2} = 32$ (1).", items: [
+                    { text: "Giá trị $x=-1$ không là nghiệm của phương trình (1).", isTrue: true },
+                    { text: "Giá trị $x=2$ là một nghiệm của phương trình (1).", isTrue: false },
+                    { text: "Phương trình (1) tương đương với phương trình $2^{x^2-4x+8} = 2^5$.", isTrue: true },
+                    { text: "Gọi $x_1, x_2$ là hai nghiệm của (1), ta có $x_1^2 + x_2^2 = 10$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Thay $x=-1$ vào VT: $16^3 \\cdot 2^1 = 4096 \\cdot 2 \\ne 32$.<br>b) Sai. Thay $x=2$ vào VT: $16^0 \\cdot 2^4 = 1 \\cdot 16 = 16 \\ne 32$.<br>c) Đúng. Đưa về cơ số 2: $16^{2-x} = (2^4)^{2-x} = 2^{8-4x}$. Tích: $2^{8-4x} \\cdot 2^{x^2} = 2^{x^2-4x+8}$. Vế phải $32 = 2^5$.<br>d) Đúng. $x^2-4x+8 = 5 \\Leftrightarrow x^2-4x+3=0 \\Rightarrow x=1, x=3$. Tổng bình phương: $1^2+3^2=10$." },
+                { id: "oc6_p2_3", question: "Cho hàm số $f(x) = \\log_{\\frac{1}{2}} x$.", items: [
+                    { text: "Tập xác định của hàm số $f(x)$ là đoạn $D = [1; +\\infty)$.", isTrue: false },
+                    { text: "Phương trình $f(x) = 0$ có một nghiệm duy nhất $x = 1$.", isTrue: true },
+                    { text: "Bất phương trình $f(x) &gt; 0$ có tập nghiệm là $S = (0; +\\infty)$.", isTrue: false },
+                    { text: "Hàm số thỏa mãn bất đẳng thức $f(2024) &gt; f(2025)$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Sai. Tập xác định của hàm lôgarit là khoảng $(0; +\\infty)$.<br>b) Đúng. $\\log_{1/2} x = 0 \\Leftrightarrow x = (1/2)^0 = 1$.<br>c) Sai. $f(x) &gt; 0 \\Leftrightarrow \\log_{1/2} x &gt; \\log_{1/2} 1$. Vì cơ số &lt; 1, BPT đổi chiều: $x &lt; 1$. Kết hợp đk $\\Rightarrow S = (0; 1)$.<br>d) Đúng. Hàm số có cơ số $1/2 &lt; 1$ nên nghịch biến. Vì $2024 &lt; 2025$ nên $f(2024) &gt; f(2025)$." },
+                { id: "oc6_p2_4", question: "Một người gửi tiết kiệm 10 tỉ đồng theo thể thức lãi kép kì hạn 12 tháng với lãi suất 7%/năm.", items: [
+                    { text: "Số tiền người đó nhận được sau $n$ năm là $T = 10^{10} \\cdot 1.07^n$ đồng.", isTrue: true },
+                    { text: "Sau 1 năm số tiền người đó nhận được là đúng $107 \\cdot 10^7$ đồng.", isTrue: false },
+                    { text: "Sau 2 năm người đó nhận được tổng số tiền ít hơn 11 tỉ đồng.", isTrue: false },
+                    { text: "Để nhận được số tiền nhiều hơn 12 tỉ đồng, cần gửi ít nhất 3 năm.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Công thức $T = P(1+r)^n = 10 \\cdot 10^9 \\cdot (1+0.07)^n = 10^{10} \\cdot 1.07^n$.<br>b) Sai. Sau 1 năm: $10^{10} \\cdot 1.07 = 1.07 \\cdot 10^{10} = 107 \\cdot 10^8$ đồng. Con số trong đề bị thiếu một số 0.<br>c) Sai. Sau 2 năm: $10 \\cdot 1.07^2 = 11.449$ tỉ đồng. Số này lớn hơn 11 tỉ.<br>d) Đúng. $10 \\cdot 1.07^n &gt; 12 \\Leftrightarrow 1.07^n &gt; 1.2 \\Leftrightarrow n &gt; \\log_{1.07} 1.2 \\approx 2.69$. Do gửi theo năm chẵn nên cần ít nhất 3 năm." },
+                { id: "oc6_p2_5", question: "Cho hàm số $y = \\ln(x^2 - 4x + 3)$.", items: [
+                    { text: "Tập xác định của hàm số là $D = (-\\infty; 1) \\cup (3; +\\infty)$.", isTrue: true },
+                    { text: "Đồ thị hàm số đi qua điểm $A(4; \\ln 3)$.", isTrue: true },
+                    { text: "Hàm số luôn nhận giá trị dương trên tập xác định.", isTrue: false },
+                    { text: "Phương trình $\\ln(x^2 - 4x + 3) = 0$ có đúng 2 nghiệm phân biệt.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Điều kiện $x^2 - 4x + 3 &gt; 0 \\Leftrightarrow x &lt; 1$ hoặc $x &gt; 3$.<br>b) Đúng. Thay $x = 4 \\Rightarrow y = \\ln(16 - 16 + 3) = \\ln 3$.<br>c) Sai. Giá trị hàm số có thể âm, ví dụ lấy $x = 3.1 \\Rightarrow x^2-4x+3 = 0.21 &lt; 1 \\Rightarrow \\ln(0.21) &lt; 0$.<br>d) Đúng. $\\ln(x^2 - 4x + 3) = 0 \\Leftrightarrow x^2 - 4x + 3 = 1 \\Leftrightarrow x^2 - 4x + 2 = 0$. Phương trình này có 2 nghiệm phân biệt là $x = 2 \\pm \\sqrt{2}$, cả 2 đều thỏa mãn ĐKXĐ." },
+                { id: "oc6_p2_6", question: "Xét phương trình $9^x - 4 \\cdot 3^x + 3 = 0$.", items: [
+                    { text: "Nếu đặt $t = 3^x (t &gt; 0)$, ta được phương trình $t^2 - 4t + 3 = 0$.", isTrue: true },
+                    { text: "Phương trình đã cho có hai nghiệm là $x = 1$ và $x = 3$.", isTrue: false },
+                    { text: "Tổng các nghiệm của phương trình bằng 1.", isTrue: true },
+                    { text: "Gọi $x_1, x_2$ là hai nghiệm của phương trình, ta có $3^{x_1} + 3^{x_2} = 4$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. $9^x = (3^x)^2 = t^2$. Phương trình thành $t^2 - 4t + 3 = 0$.<br>b) Sai. Giải phương trình $t$ ta được $t = 1$ và $t = 3$. Tương ứng $3^x = 1 \\Rightarrow x = 0$ và $3^x = 3 \\Rightarrow x = 1$. Nghiệm là 0 và 1.<br>c) Đúng. Tổng các nghiệm là $0 + 1 = 1$.<br>d) Đúng. Ta có $t_1 + t_2 = 1 + 3 = 4$, tương đương $3^{x_1} + 3^{x_2} = 4$." },
+                { id: "oc6_p2_7", question: "Xét bất phương trình $\\log_2(x-1) + \\log_2(x+1) \\le 3$.", items: [
+                    { text: "Điều kiện xác định của bất phương trình là $x &gt; 1$.", isTrue: true },
+                    { text: "Bất phương trình đã cho tương đương với hệ quả $x^2 - 1 \\le 8$.", isTrue: true },
+                    { text: "Tập nghiệm của bất phương trình là đoạn $[-3; 3]$.", isTrue: false },
+                    { text: "Bất phương trình có đúng 2 nghiệm nguyên.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. $\\begin{cases} x-1 &gt; 0 \\\\ x+1 &gt; 0 \\end{cases} \\Rightarrow x &gt; 1$.<br>b) Đúng. Sử dụng quy tắc cộng lôgarit cùng cơ số và bỏ lôgarit: $x^2 - 1 \\le 2^3 = 8$.<br>c) Sai. Giải hệ quả: $x^2 \\le 9 \\Leftrightarrow -3 \\le x \\le 3$. Giao với điều kiện $x &gt; 1$, tập nghiệm đúng phải là $S = (1; 3]$.<br>d) Đúng. Khoảng $(1; 3]$ chứa 2 số nguyên là 2 và 3." },
+                { id: "oc6_p2_8", question: "Công thức độ lớn động đất theo thang Richter là $M = \\log A - \\log A_0$.", items: [
+                    { text: "Có thể viết lại công thức trên thành $\\frac{A}{A_0} = 10^M$.", isTrue: true },
+                    { text: "Một trận động đất 6 độ Richter có biên độ tối đa lớn gấp 10 lần trận 5 độ Richter.", isTrue: true },
+                    { text: "Trận động đất 4 độ Richter có biên độ tối đa $A$ gấp 4000 lần biên độ chuẩn $A_0$.", isTrue: false },
+                    { text: "Nếu biên độ $A$ tăng lên 1000 lần thì độ Richter $M$ sẽ tăng thêm 3 độ.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. $M = \\log\\left(\\frac{A}{A_0}\\right) \\Leftrightarrow \\frac{A}{A_0} = 10^M$.<br>b) Đúng. Tỷ lệ biên độ $\\frac{A_6}{A_5} = \\frac{10^6}{10^5} = 10$ lần.<br>c) Sai. $M=4 \\Rightarrow \\frac{A}{A_0} = 10^4 = 10000$ lần, không phải 4000 lần.<br>d) Đúng. $M_{moi} = \\log\\left(\\frac{1000A}{A_0}\\right) = \\log 1000 + \\log\\frac{A}{A_0} = 3 + M_{cu}$." },
+                { id: "oc6_p2_9", question: "Xét các tính chất chung của hàm số mũ và hàm số lôgarit:", items: [
+                    { text: "Hàm số mũ $y = a^x$ đồng biến trên $\\mathbb{R}$ khi và chỉ khi $a &gt; 1$.", isTrue: true },
+                    { text: "Hàm số lôgarit $y = \\log_a x$ đồng biến trên $(0; +\\infty)$ khi $0 &lt; a &lt; 1$.", isTrue: false },
+                    { text: "Với mọi cơ số $a &gt; 1$, ta luôn có $a^{\\sqrt{2}} &lt; a^{\\sqrt{3}}$.", isTrue: true },
+                    { text: "Giá trị của $\\log_a b &gt; 0$ khi và chỉ khi $(a-1)(b-1) &gt; 0$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Tính chất cơ bản của hàm số mũ.<br>b) Sai. Hàm số lôgarit với cơ số $0 &lt; a &lt; 1$ thì nghịch biến.<br>c) Đúng. Vì $a &gt; 1$ hàm đồng biến, và $\\sqrt{2} &lt; \\sqrt{3}$ nên bất đẳng thức cùng chiều.<br>d) Đúng. $\\log_a b &gt; 0$ khi và chỉ khi cả cơ số $a$ và số $b$ cùng lớn hơn 1, hoặc cùng nằm trong khoảng $(0; 1)$. Điều này tương đương với tích $(a-1)(b-1) &gt; 0$." },
+                { id: "oc6_p2_10", question: "Mô hình nuôi cấy vi khuẩn tuân theo công thức $S(t) = S(0) \\cdot 2^{t/3}$ với $t$ tính bằng giờ.", items: [
+                    { text: "Số lượng vi khuẩn tăng gấp 3 lần sau mỗi 3 giờ.", isTrue: false },
+                    { text: "Tại thời điểm $t=0$, số lượng vi khuẩn chính bằng $S(0)$.", isTrue: true },
+                    { text: "Nếu số lượng ban đầu là 100 con, thì sau 6 giờ sẽ có 400 con.", isTrue: true },
+                    { text: "Để số lượng vi khuẩn từ 100 con tăng lên thành 800 con, cần mất đúng 9 giờ.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Sai. Tại $t=3$, $S(3) = S(0) \\cdot 2^1 = 2S(0)$. Số lượng tăng gấp ĐÔI, không phải gấp 3.<br>b) Đúng. Thay $t=0$ vào công thức ta được $2^0 = 1$.<br>c) Đúng. $S(6) = 100 \\cdot 2^{6/3} = 100 \\cdot 2^2 = 400$.<br>d) Đúng. Giải PT $800 = 100 \\cdot 2^{t/3} \\Leftrightarrow 2^{t/3} = 8 \\Leftrightarrow t/3 = 3 \\Leftrightarrow t = 9$ giờ." }
+            ],
+            part3: [
+                { id: "oc6_p3_1", question: "Tìm số nghiệm nguyên của bất phương trình $\\log_3(2x - 1) \\le \\log_3 5$.", keywords: ["3"], explanation: "Điều kiện: $2x - 1 &gt; 0 \\Leftrightarrow x &gt; 0.5$. <br>Do cơ số $3 &gt; 1$, BPT tương đương: $2x - 1 \\le 5 \\Leftrightarrow 2x \\le 6 \\Leftrightarrow x \\le 3$. <br>Kết hợp điều kiện, ta có $0.5 &lt; x \\le 3$. <br>Các nghiệm nguyên là $1, 2, 3$. Vậy có $3$ nghiệm." },
+                { id: "oc6_p3_2", question: "Có bao nhiêu giá trị nguyên của $a$ để hàm số $y = (2a - 5)^x$ nghịch biến trên $\\mathbb{R}$?", keywords: ["0"], explanation: "Để hàm số mũ nghịch biến, cơ số phải nằm trong khoảng $(0; 1)$. <br>Ta có $0 &lt; 2a - 5 &lt; 1 \\Leftrightarrow 5 &lt; 2a &lt; 6 \\Leftrightarrow 2.5 &lt; a &lt; 3$. <br>Trong khoảng $(2.5; 3)$ không chứa bất kỳ số nguyên nào. Do đó có $0$ giá trị." },
+                { id: "oc6_p3_3", question: "Cho $a, b$ là các số thực dương thỏa mãn $a \\ne 1, a \\ne \\sqrt{b}$ và $\\log_a b = \\sqrt{3}$. Tính giá trị của biểu thức $P = \\log_{\\frac{\\sqrt{b}}{a}} \\sqrt{\\frac{b}{a}}$ (làm tròn kết quả đến 1 chữ số thập phân).", keywords: ["-2.7", "-2,7"], explanation: "Phân tích biểu thức $P$: <br>Tử số: $\\log_a \\sqrt{\\frac{b}{a}} = \\frac{1}{2}\\log_a(b/a) = \\frac{1}{2}(\\log_a b - 1)$. <br>Mẫu số (chuyển cơ số $a$): $\\log_a\\left(\\frac{\\sqrt{b}}{a}\\right) = \\frac{1}{2}\\log_a b - 1$. <br>Vậy $P = \\frac{\\frac{1}{2}(\\sqrt{3} - 1)}{\\frac{1}{2}\\sqrt{3} - 1} = \\frac{\\sqrt{3} - 1}{\\sqrt{3} - 2}$. <br>Nhân liên hợp: $P = (\\sqrt{3}-1)(\\sqrt{3}+2) / -1 = -(3 + 2\\sqrt{3} - \\sqrt{3} - 2) = -(1 + \\sqrt{3}) \\approx -2.732$. <br>Làm tròn 1 chữ số là $-2.7$." },
+                { id: "oc6_p3_4", question: "Để quảng bá cho sản phẩm A, một công ty quảng cáo trên TV. Sau $n$ lần phát, tỉ lệ người xem mua sản phẩm tuân theo công thức $P(n) = \\frac{1}{1 + 49e^{-0.015n}}$. Cần phát ít nhất bao nhiêu lần để tỉ lệ này đạt trên 30%?", keywords: ["203"], explanation: "Yêu cầu: $P(n) &gt; 0.3 \\Leftrightarrow \\frac{1}{1 + 49e^{-0.015n}} &gt; 0.3 = \\frac{3}{10}$. <br>$\\Leftrightarrow 1 + 49e^{-0.015n} &lt; \\frac{10}{3} \\Leftrightarrow 49e^{-0.015n} &lt; \\frac{7}{3} \\Leftrightarrow e^{-0.015n} &lt; \\frac{1}{21}$. <br>$\\Leftrightarrow -0.015n &lt; -\\ln 21 \\Leftrightarrow n &gt; \\frac{\\ln 21}{0.015} \\approx 202.96$. <br>Vì $n$ nguyên dương nên số lần ít nhất là $203$." },
+                { id: "oc6_p3_5", question: "Ông An gửi 200 triệu đồng, lãi kép kỳ hạn 6 tháng, lãi suất 8%/năm. Ông rút tiền sau 5 năm 8 tháng, biết 2 tháng rút trước hạn ngân hàng tính lãi không kỳ hạn 0.002%/ngày (60 ngày). Tính số tiền nhận được (làm tròn đến hàng đơn vị triệu đồng).", keywords: ["308"], explanation: "Lãi suất kỳ hạn 6 tháng là $4\\%$. Thời gian gửi là 68 tháng = 11 kỳ hạn (66 tháng) + 2 tháng (60 ngày) dư. <br>Tiền gốc và lãi sau 11 kỳ: $T_{11} = 200 \\cdot (1 + 0.04)^{11} \\approx 307.89$ triệu. <br>Tiền này tiếp tục sinh lãi không kỳ hạn trong 60 ngày: $T_{final} = 307.89 \\cdot (1 + 0.00002 \\times 60) = 307.89 \\times 1.0012 \\approx 308.26$. <br>Làm tròn đến hàng đơn vị triệu đồng là $308$." },
+                { id: "oc6_p3_6", question: "Sự suy giảm GDP toàn cầu khi nhiệt độ tăng $t^{\\circ}C$ được tính bằng $f(t) = k \\cdot a^t \\%$. Tăng $2^{\\circ}C$ giảm 3%; tăng $5^{\\circ}C$ giảm 10%. Khi nhiệt độ tăng bao nhiêu độ thì GDP giảm đến 18%? (Làm tròn đến 1 chữ số thập phân).", keywords: ["6.5", "6,5"], explanation: "Ta có hệ: $ka^2 = 3$ và $ka^5 = 10$. <br>Chia vế theo vế: $a^3 = 10/3 \\Rightarrow a = \\sqrt[3]{10/3}$. <br>Để giảm 18%: $ka^t = 18$. Lấy phương trình này chia cho $ka^2 = 3$, ta được $a^{t-2} = 6$. <br>Suy ra $t - 2 = \\log_a 6 = \\frac{\\ln 6}{\\frac{1}{3}\\ln(10/3)} = \\frac{3\\ln 6}{\\ln 10 - \\ln 3} \\approx 4.46$. <br>Vậy $t = 2 + 4.46 = 6.46$. Làm tròn 1 chữ số là $6.5$." },
+                { id: "oc6_p3_7", question: "Tìm tổng các nghiệm của phương trình $4^x - 3 \\cdot 2^x + 2 = 0$.", keywords: ["1"], explanation: "Đặt $t = 2^x (t &gt; 0)$. Phương trình trở thành $t^2 - 3t + 2 = 0$. <br>Giải phương trình được $t = 1$ hoặc $t = 2$. <br>Với $t = 1 \\Rightarrow 2^x = 1 \\Rightarrow x = 0$. <br>Với $t = 2 \\Rightarrow 2^x = 2 \\Rightarrow x = 1$. <br>Tổng các nghiệm là $0 + 1 = 1$." },
+                { id: "oc6_p3_8", question: "Tích các nghiệm của phương trình $\\log_2(x^2 - 3x + 4) = 1$ bằng bao nhiêu?", keywords: ["2"], explanation: "Phương trình tương đương: $x^2 - 3x + 4 = 2^1 = 2$. <br>$\\Leftrightarrow x^2 - 3x + 2 = 0$. <br>Theo định lý Vi-et (hoặc giải trực tiếp ra $x=1, x=2$), tích các nghiệm là $c/a = 2$." },
+                { id: "oc6_p3_9", question: "Có bao nhiêu số nguyên $x$ thuộc tập xác định của hàm số $y = \\ln(100 - x^2)$?", keywords: ["19"], explanation: "Điều kiện xác định: $100 - x^2 &gt; 0 \\Leftrightarrow x^2 &lt; 100 \\Leftrightarrow -10 &lt; x &lt; 10$. <br>Các số nguyên thỏa mãn nằm từ $-9$ đến $9$. <br>Số lượng: $9 - (-9) + 1 = 19$ số." },
+                { id: "oc6_p3_10", question: "Một khoản tiền được gửi với lãi suất 6%/năm theo hình thức lãi kép. Hỏi sau ít nhất bao nhiêu năm (số nguyên) thì khoản tiền này tăng gấp đôi?", keywords: ["12"], explanation: "Yêu cầu: $P(1+0.06)^n \\ge 2P \\Leftrightarrow 1.06^n \\ge 2$. <br>Giải ra: $n \\ge \\log_{1.06} 2 \\approx 11.896$. <br>Vì tiền gửi chốt lãi theo chu kỳ năm tròn nên cần ít nhất 12 năm." }
+            ]
+        };
+
+        let currentSession = [];
+        let currentIndex = 0;
+        let score = 0;
+        let selectedAnswers = null;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initGame() {
+            // Anti-repetition algorithm
+            let playedHistory = JSON.parse(localStorage.getItem('played_history_oc6_v2') || '[]');
+            const lastRoundIds = JSON.parse(localStorage.getItem('last_round_oc6_v2') || '[]');
+            
+            let globalRecycledCount = 0;
+
+            const getFresh = (pool, count) => {
+                // Priority 1: Unplayed questions AND not in last round
+                let available = pool.filter(q => !playedHistory.includes(q.id) && !lastRoundIds.includes(q.id));
+                let selected = [];
+                
+                if (available.length >= count) {
+                    selected = shuffle(available).slice(0, count);
+                } else {
+                    // Pool depleted -> Reset history, Priority 2: Not in last round
+                    const poolIds = pool.map(p => p.id);
+                    playedHistory = playedHistory.filter(id => !poolIds.includes(id));
+                    available = pool.filter(q => !lastRoundIds.includes(q.id));
+                    
+                    if (available.length >= count) {
+                        selected = shuffle(available).slice(0, count);
+                    } else {
+                        // Constraint Relaxation: Take from last round but NO MORE THAN 2
+                        selected = [...available];
+                        let needed = count - available.length;
+                        let maxAllowed = Math.max(0, 2 - globalRecycledCount);
+                        let take = Math.min(needed, maxAllowed);
+                        let recycled = shuffle(pool.filter(q => lastRoundIds.includes(q.id)));
+                        selected = selected.concat(recycled.slice(0, take));
+                        globalRecycledCount += take;
+                    }
+                }
+                
+                playedHistory.push(...selected.map(q => q.id));
+                return selected;
+            };
+
+            const p1 = getFresh(MASTER_POOL.part1, 7);
+            const p2 = getFresh(MASTER_POOL.part2, 5);
+            const p3 = getFresh(MASTER_POOL.part3, 3);
+
+            currentSession = [...p1, ...p2, ...p3];
+            
+            localStorage.setItem('played_history_oc6_v2', JSON.stringify(playedHistory));
+            localStorage.setItem('last_round_oc6_v2', JSON.stringify(currentSession.map(q => q.id)));
+
+            currentIndex = 0; 
+            score = 0;
+            
+            const startScreen = document.getElementById('start-screen');
+            if (startScreen) startScreen.classList.add('hidden');
+            
+            document.getElementById('progress-container').classList.remove('hidden');
+            document.getElementById('footer-actions').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const container = document.getElementById('main-content');
+            const data = currentSession[currentIndex];
+            const qNum = currentIndex + 1;
+            selectedAnswers = (currentIndex < 7) ? null : (currentIndex < 12 ? {} : "");
+
+            document.getElementById('status').innerText = `CÂU ${qNum} / 15`;
+            document.getElementById('progress-bar').style.width = `${(qNum / 15) * 100}%`;
+            document.getElementById('check-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('result-btn').classList.add('hidden');
+
+            let html = `<div class="fade-in">
+                <div class="mb-10 flex items-center gap-4">
+                    <span class="bg-fuchsia-700 text-white text-xs font-black px-5 py-2.5 rounded-2xl uppercase tracking-widest shadow-lg shadow-fuchsia-200">PHẦN ${qNum <= 7 ? 'I: TRẮC NGHIỆM' : (qNum <= 12 ? 'II: ĐÚNG/SAI' : 'III: TRẢ LỜI NGẮN')}</span>
+                </div>
+                <div class="text-xl md:text-2xl font-bold text-slate-800 mb-12 leading-relaxed math-render" id="q-text">${data.question}</div>`;
+
+            if (currentIndex < 7) { 
+                html += `<div class="grid gap-6">`;
+                data.options.forEach((opt, i) => {
+                    html += `<button onclick="pickMCQ(${i})" id="mcq-${i}" class="choice-btn group p-7 border-2 border-slate-100 rounded-[2rem] text-left hover:border-fuchsia-400 hover:bg-fuchsia-50 transition-all flex items-center gap-8">
+                        <div class="w-14 h-14 rounded-3xl bg-slate-50 flex items-center justify-center font-black text-slate-400 group-hover:text-fuchsia-600 transition-colors text-2xl">${String.fromCharCode(65+i)}</div>
+                        <div class="text-xl font-semibold text-slate-700 math-render">${opt}</div>
+                    </button>`;
+                });
+                html += `</div>`;
+            } else if (currentIndex < 12) { 
+                html += `<div class="space-y-6">`;
+                data.items.forEach((item, i) => {
+                    html += `<div class="item-row flex flex-col md:flex-row md:items-center justify-between p-7 bg-slate-50 rounded-[2.5rem] border border-slate-100 gap-6 shadow-sm">
+                        <div class="flex items-start gap-4">
+                            <span class="font-black text-fuchsia-600 mt-1 text-lg">${['a)', 'b)', 'c)', 'd)'][i]}</span>
+                            <span class="text-xl text-slate-700 font-bold leading-relaxed math-render">${item.text}</span>
+                        </div>
+                        <div class="flex gap-4 min-w-[260px]">
+                            <button onclick="pickTF(${i}, true)" id="tf-${i}-t" class="flex-1 py-5 rounded-[1.5rem] border-2 border-white bg-white font-black text-lg transition active:scale-90 shadow-sm text-slate-400 hover:text-fuchsia-600">ĐÚNG</button>
+                            <button onclick="pickTF(${i}, false)" id="tf-${i}-f" class="flex-1 py-5 rounded-[1.5rem] border-2 border-white bg-white font-black text-lg transition active:scale-90 shadow-sm text-slate-400 hover:text-fuchsia-600">SAI</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } else { 
+                html += `<div class="relative max-w-lg mx-auto mt-12">
+                    <input type="text" id="short-ans" class="w-full p-10 border-4 border-slate-100 rounded-[3rem] text-5xl font-black text-center text-fuchsia-600 focus:border-fuchsia-500 outline-none transition shadow-inner" placeholder="Nhập đáp án...">
+                </div>`;
+            }
+
+            html += `<div id="exp-box" class="hidden mt-12 p-10 rounded-[3rem] explanation-box"></div></div>`;
+            container.innerHTML = html;
+            if (container.parentElement) container.parentElement.scrollTop = 0;
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise().then(() => {
+                    document.querySelectorAll('.math-render').forEach(el => el.classList.add('ready'));
+                });
+            }
+        }
+
+        function pickMCQ(idx) {
+            selectedAnswers = idx;
+            document.querySelectorAll('[id^="mcq-"]').forEach(b => {
+                b.classList.replace('border-fuchsia-500', 'border-slate-100');
+                b.classList.remove('bg-fuchsia-50');
+            });
+            document.getElementById(`mcq-${idx}`).classList.replace('border-slate-100', 'border-fuchsia-500');
+            document.getElementById(`mcq-${idx}`).classList.add('bg-fuchsia-50');
+        }
+
+        function pickTF(idx, val) {
+            if (typeof selectedAnswers !== 'object') selectedAnswers = {};
+            selectedAnswers[idx] = val;
+            const btnT = document.getElementById(`tf-${idx}-t`), btnF = document.getElementById(`tf-${idx}-f`);
+            btnT.className = `flex-1 py-5 rounded-[1.5rem] border-2 font-black text-lg transition active:scale-90 ${val === true ? 'bg-fuchsia-700 text-white border-fuchsia-700 shadow-md' : 'bg-white border-white text-slate-400'}`;
+            btnF.className = `flex-1 py-5 rounded-[1.5rem] border-2 font-black text-lg transition active:scale-90 ${val === false ? 'bg-fuchsia-700 text-white border-fuchsia-700 shadow-md' : 'bg-white border-white text-slate-400'}`;
+        }
+
+        function processAnswer() {
+            const data = currentSession[currentIndex];
+            let isCorrect = false;
+
+            if (currentIndex < 7) {
+                if (selectedAnswers === null) return alert("Vui lòng chọn đáp án!");
+                isCorrect = (selectedAnswers === data.correct);
+                if (isCorrect) score += 1;
+                document.getElementById(`mcq-${data.correct}`).classList.add('bg-green-50', 'border-green-500');
+                if(!isCorrect) document.getElementById(`mcq-${selectedAnswers}`).classList.add('bg-red-50', 'border-red-500');
+            } else if (currentIndex < 12) {
+                let correctCount = 0;
+                let isFullAnswered = true;
+                for(let i=0; i<4; i++) { if(selectedAnswers[i] === undefined) isFullAnswered = false; }
+                if(!isFullAnswered) return alert("Vui lòng chọn Đúng/Sai cho tất cả các ý!");
+
+                data.items.forEach((item, i) => { if (selectedAnswers[i] === item.isTrue) correctCount++; });
+                const points = [0, 0.1, 0.25, 0.5, 1];
+                score += points[correctCount];
+                isCorrect = (correctCount === 4);
+            } else {
+                const input = document.getElementById('short-ans').value.trim().toLowerCase().replace(',', '.');
+                if(!input) return alert("Vui lòng nhập đáp án!");
+                isCorrect = data.keywords.some(k => input.includes(k.toLowerCase()));
+                if (isCorrect) score += 1;
+            }
+
+            const exp = document.getElementById('exp-box');
+            exp.innerHTML = `<h4 class="text-fuchsia-800 font-extrabold text-2xl mb-6 uppercase tracking-tighter">${isCorrect ? '✨ HOÀN TOÀN CHÍNH XÁC!' : '❌ HÃY KIỂM TRA LẠI LỜI GIẢI'}</h4>
+                             <div class="text-slate-700 font-medium leading-loose math-render text-lg" id="exp-text">${data.explanation}</div>`;
+            exp.classList.remove('hidden');
+            document.getElementById('check-btn').classList.add('hidden');
+
+            if (currentIndex === 14) document.getElementById('result-btn').classList.remove('hidden');
+            else document.getElementById('next-btn').classList.remove('hidden');
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise().then(() => {
+                    const el = document.getElementById('exp-text');
+                    if(el) el.classList.add('ready');
+                });
+            }
+        }
+
+        function renderNext() { currentIndex++; renderQuestion(); }
+
+        function finishGame() {
+            const container = document.getElementById('main-content');
+            document.getElementById('footer-actions').classList.add('hidden');
+            document.getElementById('progress-container').classList.add('hidden');
+            
+            // Hệ thống 10 điểm (điểm thực là 15)
+            const finalScore = ((score / 15) * 10).toFixed(2);
+            let rank = finalScore >= 8.5 ? "XUẤT SẮC" : (finalScore >= 6.5 ? "KHÁ GIỎI" : "CẦN CỐ GẮNG");
+            
+            container.innerHTML = `<div class="text-center py-20 fade-in">
+                <div class="text-[12rem] mb-12 animate-pulse drop-shadow-2xl">🏆</div>
+                <h2 class="text-6xl font-black text-slate-800 mb-6 uppercase tracking-tighter">${rank}</h2>
+                <div class="text-[10rem] leading-none font-black text-fuchsia-600 my-16 tracking-tighter italic">${finalScore}<span class="text-4xl text-slate-300 ml-6 not-italic">/ 10</span></div>
+                <button onclick="initGame()" class="bg-fuchsia-700 text-white px-24 py-8 rounded-[3rem] font-black text-3xl shadow-xl hover:bg-fuchsia-800 transition active:scale-95 uppercase tracking-wide">CHƠI LẠI</button>
+            </div>`;
+        }
+    </script>
+</body>
+</html>
